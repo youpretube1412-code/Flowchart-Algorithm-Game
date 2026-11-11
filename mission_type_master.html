@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission: Type Master ป.6 กู้โลกไซเบอร์ (ภาษาไทย)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            overflow-x: hidden;
+        }
+        .cyber-font {
+            font-family: 'Chakra Petch', sans-serif;
+        }
+        /* Custom glow effects for cyber theme */
+        .neon-glow-blue {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        }
+        .neon-glow-green {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+        }
+        .neon-glow-red {
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Key Finger Color Mappings */
+        .fg-pinky { background-color: #f472b6; color: #fff; border: 1px solid #f9a8d4; box-shadow: 0 0 10px rgba(244, 114, 182, 0.5); }
+        .fg-ring { background-color: #fb923c; color: #fff; border: 1px solid #fdba74; box-shadow: 0 0 10px rgba(251, 146, 60, 0.5); }
+        .fg-middle { background-color: #facc15; color: #1e293b; border: 1px solid #fef08a; box-shadow: 0 0 10px rgba(250, 204, 21, 0.5); }
+        .fg-index { background-color: #4ade80; color: #1e293b; border: 1px solid #86efac; box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+        .fg-thumb { background-color: #60a5fa; color: #fff; border: 1px solid #93c5fd; box-shadow: 0 0 10px rgba(96, 165, 250, 0.5); }
+        .fg-unknown { background-color: #64748b; color: #fff; }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+        .error-glitch {
+            animation: glitch 0.2s linear infinite;
+            color: #ef4444 !important;
+            text-shadow: 2px 0 #b91c1c, -2px 0 #fca5a5;
+        }
+        
+        .cursor-blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between transition-colors duration-300" id="body-container">
+
+    <!-- HEADER / STATUS BAR -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-red-600 to-amber-500 p-2 rounded-lg text-white shadow-lg shadow-red-500/30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+                </div>
+                <div>
+                    <h1 class="cyber-font text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-amber-300">THAI TYPE MASTER ป.6</h1>
+                    <p class="text-xs text-slate-400">ฝึกพิมพ์สัมผัสภาษาไทย (แป้นเกษมณี) กู้ระบบโลกไซเบอร์</p>
+                </div>
+            </div>
+
+            <!-- Global Stats -->
+            <div class="flex items-center gap-6 text-sm cyber-font">
+                <div class="bg-slate-800/80 px-4 py-1.5 rounded-full border border-slate-700/50">
+                    <span class="text-slate-400 mr-2">คะแนนรวมสะสม:</span>
+                    <span id="global-score" class="text-amber-400 font-bold text-lg">0</span>
+                </div>
+                <div class="bg-slate-800/80 px-4 py-1.5 rounded-full border border-slate-700/50">
+                    <span class="text-slate-400 mr-2">ด่าน:</span>
+                    <span id="current-level-badge" class="text-red-400 font-bold">0/10</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        
+        <!-- 1. START SCREEN / LEVEL SELECT -->
+        <div id="screen-start" class="w-full max-w-4xl bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-10 backdrop-blur-md">
+            <div class="text-center max-w-2xl mx-auto mb-8">
+                <span class="bg-red-500/10 text-red-400 text-xs font-semibold px-4 py-1.5 rounded-full border border-red-500/30 uppercase tracking-widest">ปฏิบัติการถอดรหัสแป้นพิมพ์ไทย</span>
+                <h2 class="cyber-font text-3xl sm:text-5xl font-extrabold mt-4 mb-3 text-white leading-tight">กู้คืนคีย์บอร์ดสายฟ้า</h2>
+                <p class="text-slate-400 text-sm sm:text-base">
+                    ไวรัสพยายามลบชุดภาษาไทยออกจากระบบคอมพิวเตอร์กลาง! น้องๆ ป.6 ต้องใช้ความรวดเร็วและความแม่นยำในการพิมพ์ภาษาไทยตามกฎการพิมพ์สัมผัสเพื่อปกป้องระบบไว้ให้ทันการ
+                </p>
+                <div class="mt-4 flex flex-wrap justify-center gap-4 text-xs text-slate-400">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> เวลาด่านละ 2 นาที</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> พิมพ์ผิดหัก 1 คะแนน/ตัว</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> จบคำได้ +10 คะแนน</span>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-800/80 my-6"></div>
+
+            <h3 class="cyber-font text-lg font-semibold text-slate-300 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                ระดับการทดสอบพิมพ์สัมผัสไทย (1 - 10)
+            </h3>
+
+            <!-- Level Grid (Populated by JS) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="level-selection-grid">
+            </div>
+
+            <div class="mt-8 text-center">
+                <button onclick="startGameAtLevel(0)" class="cyber-font font-bold px-8 py-4 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 rounded-2xl shadow-lg shadow-red-600/30 transition-all transform hover:-translate-y-1 active:translate-y-0 text-white text-lg w-full sm:w-auto">
+                    เริ่มภารกิจด่านที่ 1 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. GAMEPLAY SCREEN -->
+        <div id="screen-game" class="w-full max-w-5xl bg-slate-900/60 border border-slate-800 rounded-3xl p-4 sm:p-8 backdrop-blur-md hidden flex-col gap-6">
+            
+            <!-- Game Top bar with info -->
+            <div class="flex flex-wrap justify-between items-center gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800 shadow-inner">
+                <div class="flex items-center gap-3">
+                    <div id="level-badge" class="px-3 py-1.5 bg-red-500/20 text-red-300 text-sm font-bold cyber-font rounded-lg border border-red-500/30">
+                        ด่านที่ 1
+                    </div>
+                    <div>
+                        <h4 id="level-title" class="font-bold text-white text-sm sm:text-base">แป้นเหย้าพื้นฐาน</h4>
+                        <p id="level-desc" class="text-xs text-slate-400">ฟ ห ก ด เ ้ ่ า ส ว</p>
+                    </div>
+                </div>
+
+                <!-- Live stats -->
+                <div class="flex flex-wrap gap-4 items-center">
+                    <!-- Progress -->
+                    <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-500 leading-none">ความคืบหน้า</div>
+                            <span id="progress-text" class="cyber-font text-blue-400 font-bold text-lg">0/10</span>
+                        </div>
+                    </div>
+                    <!-- Level Score -->
+                    <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-500 leading-none">คะแนนด่านนี้</div>
+                            <span id="level-score" class="cyber-font text-amber-400 font-bold text-lg">0</span>
+                        </div>
+                    </div>
+                    <!-- Timer -->
+                    <div class="flex items-center gap-2 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800" id="timer-container">
+                        <div class="text-right">
+                            <div class="text-[10px] text-slate-500 leading-none">เวลาถอยหลัง</div>
+                            <span id="timer-text" class="cyber-font text-emerald-400 font-bold text-lg">02:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing Interface Core -->
+            <div class="flex flex-col gap-6">
+                <!-- Text Box and Input Area -->
+                <div class="bg-slate-800/40 border-2 border-slate-700 rounded-2xl p-8 relative overflow-hidden group shadow-lg min-h-[200px] flex items-center justify-center cursor-text" id="typing-area" onclick="document.getElementById('typing-input').focus()">
+                    
+                    <div class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                    
+                    <!-- Text Display -->
+                    <div id="target-text-display" class="text-4xl md:text-6xl font-medium tracking-wide leading-relaxed break-words text-center flex flex-wrap justify-center gap-x-1 gap-y-4">
+                        <!-- Words injected by JS -->
+                    </div>
+                    
+                    <!-- Hidden Input for capturing Thai keystrokes cleanly -->
+                    <input type="text" id="typing-input" class="absolute opacity-0 top-0 left-0 w-full h-full cursor-default" autocomplete="off" spellcheck="false" />
+                </div>
+
+                <!-- Hint Panel (Finger indicator) -->
+                <div class="bg-slate-950 border border-slate-800 p-6 rounded-2xl shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
+                    <div class="text-center sm:text-left">
+                        <p class="text-slate-400 text-sm mb-1">ตัวอักษรต่อไป (Next Key)</p>
+                        <div class="flex items-center gap-3 justify-center sm:justify-start">
+                            <kbd id="next-key-display" class="w-16 h-16 flex items-center justify-center bg-slate-800 border-b-4 border-slate-600 rounded-xl text-3xl text-white shadow-lg cyber-font font-bold">
+                                ฟ
+                            </kbd>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 max-w-sm w-full">
+                        <p class="text-slate-400 text-sm text-center mb-2">ใช้นิ้วนี้ในการพิมพ์ (Finger Guide)</p>
+                        <div class="flex justify-center">
+                            <div id="finger-hint" class="px-6 py-3 rounded-xl text-lg font-bold fg-pinky shadow-lg flex items-center gap-2 transition-all duration-300">
+                                นิ้วก้อยซ้าย
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. RESULT SCREEN (Level Complete / Game Over) -->
+        <div id="screen-result" class="w-full max-w-lg bg-slate-900/90 border border-slate-700 rounded-3xl p-10 backdrop-blur-md hidden text-center shadow-2xl">
+            <div id="result-icon" class="text-7xl mb-4">🏆</div>
+            <h2 id="result-title" class="cyber-font text-4xl font-extrabold text-emerald-400 mb-2">ผ่านด่านสำเร็จ!</h2>
+            <p id="result-subtitle" class="text-slate-300 mb-6">คุณได้ทำลายไวรัสในส่วนนี้แล้ว</p>
+            
+            <div class="bg-slate-950 rounded-2xl p-6 mb-8 border border-slate-800">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-slate-400">คะแนนด่านนี้:</span>
+                    <span class="text-2xl font-bold text-amber-400 cyber-font" id="result-level-score">0</span>
+                </div>
+                <div class="flex justify-between items-center border-t border-slate-800 pt-3">
+                    <span class="text-slate-400">คะแนนรวมสะสม:</span>
+                    <span class="text-2xl font-bold text-emerald-400 cyber-font" id="result-global-score">0</span>
+                </div>
+            </div>
+
+            <button id="next-level-btn" class="cyber-font font-bold px-8 py-4 bg-gradient-to-r from-blue-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 rounded-2xl shadow-lg shadow-emerald-600/30 transition-all transform hover:-translate-y-1 text-white text-xl w-full">
+                ไปด่านต่อไป ⏭️
+            </button>
+            <button id="retry-btn" class="hidden cyber-font font-bold px-8 py-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 rounded-2xl shadow-lg shadow-red-600/30 transition-all transform hover:-translate-y-1 text-white text-xl w-full">
+                ลองอีกครั้ง 🔄
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // --- 1. Game Data & Configurations ---
+        
+        // 10 Levels Curriculum for Grade 6
+        const levels = [
+            { title: "แป้นเหย้า (Home Row)", desc: "ฟ ห ก ด เ ้ ่ า ส ว", words: ["ฟหก", "ดเ้", "่าว", "สว", "กหด", "สาว", "วาด", "หก", "ฟาด", "สาด"] },
+            { title: "ก้าวสู่แป้นบน (Upper Row)", desc: "พ ร อ น ย ม ไ ำ", words: ["พร", "อน", "ยม", "ไพ", "รำ", "พาย", "รอย", "นอน", "มอง", "พรม"] },
+            { title: "ลงสู่แป้นล่าง (Lower Row)", desc: "ผ ป แ อ ิ ื ท ม", words: ["ผป", "แอม", "ทิม", "ปืน", "ผอม", "แพ", "ทา", "มา", "พิมพ์", "ผี"] },
+            { title: "ประสมคำง่าย (Easy Words)", desc: "คำศัพท์ 1-2 พยางค์", words: ["ไก่", "ไข่", "ขวด", "ควาย", "คน", "งู", "จาน", "ฉิ่ง", "ช้าง", "ดาว"] },
+            { title: "คำศัพท์รอบตัว (Daily Words)", desc: "สิ่งของและธรรมชาติ", words: ["ปากกา", "สมุด", "ดินสอ", "ภูเขา", "แม่น้ำ", "น้ำตก", "หน้าต่าง", "ประตู", "หนังสือ", "กระดาน"] },
+            { title: "วิชาเรียน ป.6 (Subjects)", desc: "คำศัพท์วิชาต่างๆ", words: ["วิทยาศาสตร์", "คณิตศาสตร์", "ประวัติศาสตร์", "ภาษาไทย", "พลศึกษา", "ศิลปะ", "ดนตรี", "การงาน", "สังคม", "อังกฤษ"] },
+            { title: "ประโยคสั้นๆ (Short Sentences)", desc: "ฝึกพิมพ์ประโยค 1", words: ["วันนี้อากาศดี", "ฉันชอบเรียน", "แมวชอบกินปลา", "นกบินบนฟ้า", "น้องเล่นของเล่น"] },
+            { title: "ประโยคพื้นฐาน (Basic Sentences)", desc: "ฝึกพิมพ์ประโยค 2", words: ["ประเทศไทยมีสามฤดู", "คอมพิวเตอร์มีประโยชน์", "การตั้งใจเรียนคือสิ่งที่ดี", "ต้นไม้ให้ความร่มรื่น", "ฉันตื่นเช้าทุกวัน"] },
+            { title: "สำนวนไทย (Thai Idioms)", desc: "คำพังเพยสุภาษิต", words: ["กบในกะลาครอบ", "ขี่ช้างจับตั๊กแตน", "น้ำขึ้นให้รีบตัก", "จับปลาสองมือ", "สีซอให้ควายฟัง"] },
+            { title: "กู้โลกไซเบอร์! (Cyber Master!)", desc: "ทดสอบความยาวและความเร็ว", words: ["ความพยายามอยู่ที่ไหนความสำเร็จอยู่ที่นั่น", "ระยะทางพิสูจน์ม้ากาลเวลาพิสูจน์คน", "ข้อมูลทั้งหมดได้รับการปกป้องแล้ว"] }
+        ];
+
+        // Character to Finger Mapping (Thai Kedmanee Layout mapped to physical keys)
+        const fingerMap = {
+            // Left Pinky
+            '1': 'fg-pinky', 'q': 'fg-pinky', 'a': 'fg-pinky', 'z': 'fg-pinky',
+            'ๅ': 'fg-pinky', 'ๆ': 'fg-pinky', 'ฟ': 'fg-pinky', 'ผ': 'fg-pinky',
+            '+': 'fg-pinky', '๐': 'fg-pinky', 'ฤ': 'fg-pinky', '(': 'fg-pinky',
+            // Left Ring
+            '2': 'fg-ring', 'w': 'fg-ring', 's': 'fg-ring', 'x': 'fg-ring',
+            '/': 'fg-ring', 'ไ': 'fg-ring', 'ห': 'fg-ring', 'ป': 'fg-ring',
+            '๑': 'fg-ring', '"': 'fg-ring', 'ฆ': 'fg-ring', ')': 'fg-ring',
+            // Left Middle
+            '3': 'fg-middle', 'e': 'fg-middle', 'd': 'fg-middle', 'c': 'fg-middle',
+            '-': 'fg-middle', 'ำ': 'fg-middle', 'ก': 'fg-middle', 'แ': 'fg-middle',
+            '๒': 'fg-middle', 'ฎ': 'fg-middle', 'ฏ': 'fg-middle', 'ฉ': 'fg-middle',
+            // Left Index
+            '4': 'fg-index', '5': 'fg-index', 'r': 'fg-index', 't': 'fg-index', 'f': 'fg-index', 'g': 'fg-index', 'v': 'fg-index', 'b': 'fg-index',
+            'ภ': 'fg-index', 'ถ': 'fg-index', 'พ': 'fg-index', 'ะ': 'fg-index', 'ด': 'fg-index', 'เ': 'fg-index', 'อ': 'fg-index', 'ิ': 'fg-index',
+            '๓': 'fg-index', '๔': 'fg-index', 'ฑ': 'fg-index', 'ธ': 'fg-index', 'โ': 'fg-index', 'ฌ': 'fg-index', 'ฮ': 'fg-index', 'ฺ': 'fg-index',
+            // Right Index
+            '6': 'fg-index', '7': 'fg-index', 'y': 'fg-index', 'u': 'fg-index', 'h': 'fg-index', 'j': 'fg-index', 'n': 'fg-index', 'm': 'fg-index',
+            'ุ': 'fg-index', 'ึ': 'fg-index', 'ั': 'fg-index', 'ี': 'fg-index', '้': 'fg-index', '่': 'fg-index', 'ื': 'fg-index', 'ท': 'fg-index',
+            'ู': 'fg-index', '฿': 'fg-index', '๊': 'fg-index', '๋': 'fg-index', '็': 'fg-index', 'ษ': 'fg-index', '์': 'fg-index', '?': 'fg-index',
+            // Right Middle
+            '8': 'fg-middle', 'i': 'fg-middle', 'k': 'fg-middle', ',': 'fg-middle',
+            'ค': 'fg-middle', 'ร': 'fg-middle', 'า': 'fg-middle', 'ม': 'fg-middle',
+            '๕': 'fg-middle', 'ณ': 'fg-middle', 'ศ': 'fg-middle', 'ฒ': 'fg-middle',
+            // Right Ring
+            '9': 'fg-ring', 'o': 'fg-ring', 'l': 'fg-ring', '.': 'fg-ring',
+            'ต': 'fg-ring', 'น': 'fg-ring', 'ส': 'fg-ring', 'ใ': 'fg-ring',
+            '๖': 'fg-ring', 'ฯ': 'fg-ring', 'ซ': 'fg-ring', 'ฬ': 'fg-ring',
+            // Right Pinky
+            '0': 'fg-pinky', '-': 'fg-pinky', '=': 'fg-pinky', 'p': 'fg-pinky', '[': 'fg-pinky', ']': 'fg-pinky', '\\': 'fg-pinky', ';': 'fg-pinky', '\'': 'fg-pinky', '/': 'fg-pinky',
+            'จ': 'fg-pinky', 'ข': 'fg-pinky', 'ช': 'fg-pinky', 'ย': 'fg-pinky', 'บ': 'fg-pinky', 'ล': 'fg-pinky', 'ฃ': 'fg-pinky', 'ว': 'fg-pinky', 'ง': 'fg-pinky', 'ฝ': 'fg-pinky',
+            '๗': 'fg-pinky', '๘': 'fg-pinky', '๙': 'fg-pinky', 'ญ': 'fg-pinky', 'ฐ': 'fg-pinky', 'ฅ': 'fg-pinky', 'ฦ': 'fg-pinky',
+            // Thumbs
+            ' ': 'fg-thumb'
+        };
+
+        const fingerNameMap = {
+            'fg-pinky': 'นิ้วก้อย (Pinky)',
+            'fg-ring': 'นิ้วนาง (Ring)',
+            'fg-middle': 'นิ้วกลาง (Middle)',
+            'fg-index': 'นิ้วชี้ (Index)',
+            'fg-thumb': 'นิ้วโป้ง (Thumb)',
+            'fg-unknown': 'ไม่ระบุนิ้ว'
+        };
+
+        // --- STREAMING_CHUNK:Javascript Logic - State Variables ---
+        let currentLevelIdx = 0;
+        let globalScore = 0;
+        let levelScore = 0;
+        
+        let currentWordList = [];
+        let currentWordIdx = 0;
+        let targetWord = "";
+        let currentCorrectText = "";
+        
+        let timeLeft = 120;
+        let timerInterval = null;
+
+        // DOM Elements
+        const screens = {
+            start: document.getElementById('screen-start'),
+            game: document.getElementById('screen-game'),
+            result: document.getElementById('screen-result')
+        };
+        const bodyEl = document.getElementById('body-container');
+        const inputEl = document.getElementById('typing-input');
+        const textDisplay = document.getElementById('target-text-display');
+        const nextKeyDisplay = document.getElementById('next-key-display');
+        const fingerHint = document.getElementById('finger-hint');
+
+        // --- STREAMING_CHUNK:Javascript Logic - Initialization ---
+        
+        // Render Level Selection Grid on load
+        function initLevelGrid() {
+            const grid = document.getElementById('level-selection-grid');
+            grid.innerHTML = '';
+            levels.forEach((lvl, idx) => {
+                const isLocked = false; // Could implement lock logic later
+                grid.innerHTML += `
+                    <div onclick="startGameAtLevel(${idx})" class="cursor-pointer bg-slate-800/80 border border-slate-700 p-4 rounded-xl hover:bg-slate-700 hover:border-red-400 transition-all text-center group">
+                        <div class="text-red-400 font-bold mb-1 group-hover:text-amber-400 cyber-font">ด่าน ${idx + 1}</div>
+                        <div class="text-white text-sm font-semibold truncate">${lvl.title}</div>
+                        <div class="text-slate-400 text-xs mt-1 truncate">${lvl.desc}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => {
+                s.classList.add('hidden');
+                if (s.id !== 'screen-start') s.classList.remove('flex');
+            });
+            
+            if (screenName === 'start') {
+                screens.start.classList.remove('hidden');
+                initLevelGrid();
+            } else if (screenName === 'game') {
+                screens.game.classList.remove('hidden');
+                screens.game.classList.add('flex');
+            } else if (screenName === 'result') {
+                screens.result.classList.remove('hidden');
+            }
+        }
+
+        function startGameAtLevel(levelIdx) {
+            currentLevelIdx = levelIdx;
+            levelScore = 0;
+            currentWordIdx = 0;
+            currentWordList = [...levels[levelIdx].words];
+            
+            // UI Updates
+            document.getElementById('current-level-badge').innerText = `${levelIdx + 1}/10`;
+            document.getElementById('level-badge').innerText = `ด่านที่ ${levelIdx + 1}`;
+            document.getElementById('level-title').innerText = levels[levelIdx].title;
+            document.getElementById('level-desc').innerText = levels[levelIdx].desc;
+            updateScoreUI();
+            
+            showScreen('game');
+            startTimer();
+            loadNextWord();
+            inputEl.focus();
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Core Gameplay ---
+        
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 120; // 2 Minutes
+            updateTimerUI();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerUI();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame(false); // Time out
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            const text = `${mins < 10 ? '0':''}${mins}:${secs < 10 ? '0':''}${secs}`;
+            const timerEl = document.getElementById('timer-text');
+            timerEl.innerText = text;
+            
+            if (timeLeft <= 15) {
+                timerEl.classList.remove('text-emerald-400');
+                timerEl.classList.add('text-red-500', 'animate-pulse');
+            } else {
+                timerEl.classList.add('text-emerald-400');
+                timerEl.classList.remove('text-red-500', 'animate-pulse');
+            }
+        }
+
+        function updateScoreUI() {
+            document.getElementById('level-score').innerText = levelScore;
+            document.getElementById('global-score').innerText = globalScore;
+            document.getElementById('progress-text').innerText = `${currentWordIdx}/${currentWordList.length}`;
+        }
+
+        function loadNextWord() {
+            if (currentWordIdx >= currentWordList.length) {
+                // Level Completed
+                clearInterval(timerInterval);
+                endGame(true);
+                return;
+            }
+            targetWord = currentWordList[currentWordIdx];
+            currentCorrectText = "";
+            inputEl.value = "";
+            renderWord();
+            updateProgressText();
+        }
+        
+        function updateProgressText() {
+             document.getElementById('progress-text').innerText = `${currentWordIdx}/${currentWordList.length}`;
+        }
+
+        // --- STREAMING_CHUNK:Javascript Logic - Rendering & Input ---
+
+        function renderWord() {
+            const typedText = currentCorrectText;
+            const remainingText = targetWord.substring(typedText.length);
+            
+            textDisplay.innerHTML = '';
+            
+            // Create Typed Spans
+            for(let i=0; i<typedText.length; i++) {
+                const span = document.createElement('span');
+                span.innerText = typedText[i];
+                span.className = "text-emerald-400 neon-glow-green opacity-80";
+                textDisplay.appendChild(span);
+            }
+            
+            // Create Remaining Spans
+            for(let i=0; i<remainingText.length; i++) {
+                const span = document.createElement('span');
+                span.innerText = remainingText[i];
+                
+                if (i === 0) {
+                    // Current char to type
+                    span.className = "text-white border-b-4 border-amber-400 cursor-blink";
+                    updateFingerHint(remainingText[i]);
+                } else {
+                    span.className = "text-slate-600";
+                }
+                textDisplay.appendChild(span);
+            }
+        }
+
+        function updateFingerHint(char) {
+            nextKeyDisplay.innerText = char;
+            const fingerClass = fingerMap[char] || 'fg-unknown';
+            
+            // Reset classes
+            fingerHint.className = `px-6 py-3 rounded-xl text-lg font-bold shadow-lg flex items-center gap-2 transition-all duration-300 ${fingerClass}`;
+            
+            // Check hand (left or right) loosely based on mapping layout conceptually
+            // For simplicity, just display the mapped name
+            fingerHint.innerText = fingerNameMap[fingerClass];
+        }
+
+        // Handle Input Events (Typing)
+        inputEl.addEventListener('input', (e) => {
+            const typed = inputEl.value;
+
+            // Check Word Completion
+            if (typed === targetWord) {
+                levelScore += 10;
+                globalScore += 10;
+                updateScoreUI();
+                currentWordIdx++;
+                loadNextWord();
+                return;
+            }
+
+            // Check Substring Match (Correct so far)
+            if (targetWord.startsWith(typed)) {
+                currentCorrectText = typed;
+                renderWord();
+            } else {
+                // Wrong Typed!
+                // Penalty: -1 point
+                levelScore -= 1;
+                globalScore -= 1;
+                updateScoreUI();
+                
+                triggerErrorVisuals();
+                
+                // Revert input field back to last correct state to block bad chars
+                inputEl.value = currentCorrectText;
+            }
+        });
+
+        function triggerErrorVisuals() {
+            // Screen shake
+            screens.game.classList.remove('animate-shake');
+            void screens.game.offsetWidth; // Reflow
+            screens.game.classList.add('animate-shake');
+            
+            // Red overlay flash
+            bodyEl.classList.add('bg-red-950');
+            setTimeout(() => {
+                bodyEl.classList.remove('bg-red-950');
+            }, 150);
+
+            // Glitch text
+            const currentSpan = textDisplay.querySelector('.border-b-4');
+            if(currentSpan) {
+                currentSpan.classList.add('error-glitch');
+                setTimeout(() => currentSpan.classList.remove('error-glitch'), 300);
+            }
+        }
+
+        // Keep input focused
+        document.addEventListener('click', (e) => {
+            if (!screens.game.classList.contains('hidden') && e.target.tagName !== 'BUTTON') {
+                inputEl.focus();
+            }
+        });
+
+        // --- STREAMING_CHUNK:Javascript Logic - Game Over & Navigation ---
+        
+        function endGame(isVictory) {
+            showScreen('result');
+            
+            document.getElementById('result-level-score').innerText = levelScore;
+            document.getElementById('result-global-score').innerText = globalScore;
+            
+            const btnNext = document.getElementById('next-level-btn');
+            const btnRetry = document.getElementById('retry-btn');
+            
+            if (isVictory) {
+                document.getElementById('result-icon').innerText = "🏆";
+                document.getElementById('result-title').innerText = "กู้ข้อมูลสำเร็จ!";
+                document.getElementById('result-title').className = "cyber-font text-4xl font-extrabold text-emerald-400 mb-2";
+                document.getElementById('result-subtitle').innerText = "คุณทำลายไวรัสในด่านนี้ได้สำเร็จ เยี่ยมมาก!";
+                
+                if (currentLevelIdx < levels.length - 1) {
+                    btnNext.classList.remove('hidden');
+                    btnRetry.classList.add('hidden');
+                    btnNext.onclick = () => startGameAtLevel(currentLevelIdx + 1);
+                } else {
+                    // Beat the whole game
+                    btnNext.classList.remove('hidden');
+                    btnNext.innerText = "กลับหน้าหลัก 🏠";
+                    btnNext.onclick = () => { globalScore = 0; showScreen('start'); };
+                    document.getElementById('result-subtitle').innerText = "ภารกิจเสร็จสิ้น! คุณคือกูรูพิมพ์สัมผัสตัวจริง!";
+                }
+            } else {
+                document.getElementById('result-icon').innerText = "💀";
+                document.getElementById('result-title').innerText = "เวลาหมด!";
+                document.getElementById('result-title').className = "cyber-font text-4xl font-extrabold text-red-500 mb-2";
+                document.getElementById('result-subtitle').innerText = "ไวรัสลบข้อมูลไปแล้ว... ไม่เป็นไร ลองใหม่นะ!";
+                
+                btnNext.classList.add('hidden');
+                btnRetry.classList.remove('hidden');
+                btnRetry.onclick = () => startGameAtLevel(currentLevelIdx);
+            }
+        }
+
+        // Block pasting to prevent cheating
+        inputEl.addEventListener('paste', e => e.preventDefault());
+
+        // Init App
+        window.onload = () => {
+            showScreen('start');
+        };
+    </script>
+</body>
+</html>
