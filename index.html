@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมผังงานอัลกอริทึม ป.5 - Flowchart Adventure</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 100%);
+            min-height: 100vh;
+        }
+
+        /* Drag and Drop Custom Styles */
+        .draggable-item {
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        .drop-zone {
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .drop-zone.drag-over {
+            background-color: #fef08a !important;
+            border-color: #eab308 !important;
+            transform: scale(1.02);
+        }
+
+        /* Flowchart Shapes Styling */
+        .shape-start-end {
+            border-radius: 9999px;
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            color: white;
+        }
+
+        .shape-process {
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+
+        .shape-decision {
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+
+        .shape-input-output {
+            transform: skew(-12deg);
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .shape-input-output > div {
+            transform: skew(12deg);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen">
+
+    <!-- Header Navigation -->
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-sky-100">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-amber-400 text-amber-900 w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xl shadow-md">
+                    <i class="fa-solid fa-diagram-project"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg md:text-xl text-slate-800 leading-tight">ผจญภัยโลกผังงาน!</h1>
+                    <p class="text-xs text-sky-600 font-medium">วิทยาการคำนวณ ป.5</p>
+                </div>
+            </div>
+
+            <!-- Score & Level Badge -->
+            <div class="flex items-center space-x-3">
+                <button onclick="showKnowledgeModal()" class="bg-sky-100 hover:bg-sky-200 text-sky-700 px-3 py-1.5 rounded-xl text-xs md:text-sm font-semibold transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span class="hidden sm:inline">คู่มือสัญลักษณ์</span>
+                </button>
+
+                <div class="bg-amber-100 text-amber-800 px-3 py-1.5 rounded-xl text-xs md:text-sm font-bold flex items-center space-x-1 shadow-inner">
+                    <i class="fa-solid fa-star text-amber-500"></i>
+                    <span>คะแนน: <span id="total-score" class="text-amber-700">0</span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Sidebar: Level Selection & Info -->
+        <aside class="lg:col-span-4 flex flex-col space-y-4">
+            
+            <!-- Game Progress Card -->
+            <div class="bg-white rounded-3xl p-5 shadow-lg border border-sky-100">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-600">ด่านกิจกรรม</span>
+                    <span id="level-indicator" class="text-xs bg-sky-100 text-sky-700 px-2.5 py-1 rounded-full font-bold">ด่าน 1 จาก 5</span>
+                </div>
+                <h2 id="level-title" class="text-lg font-bold text-slate-800 mb-1">การชงนมร้อน</h2>
+                <p id="level-description" class="text-xs text-slate-600 mb-4 leading-relaxed">ช่วยเรียงลำดับขั้นตอนอัลกอริทึมการชงนมร้อนให้ถูกต้องด้วยนะ!</p>
+
+                <!-- Level Select Buttons -->
+                <div class="grid grid-cols-5 gap-2 pt-2 border-t border-slate-100" id="level-buttons-container">
+                    <!-- Buttons generated dynamically -->
+                </div>
+            </div>
+
+            <!-- Flowchart Legend / Cheat Sheet Card -->
+            <div class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-3xl p-5 shadow-lg relative overflow-hidden hidden sm:block">
+                <div class="absolute -right-4 -bottom-4 opacity-10 text-8xl">
+                    <i class="fa-solid fa-shapes"></i>
+                </div>
+                <h3 class="font-bold text-sm mb-3 text-indigo-200 flex items-center space-x-2">
+                    <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                    <span>เกร็ดความรู้สัญลักษณ์</span>
+                </h3>
+                <div class="space-y-2.5 text-xs">
+                    <div class="flex items-center space-x-3 bg-white/10 p-2 rounded-xl backdrop-blur-xs">
+                        <div class="w-7 h-4 bg-rose-500 rounded-full flex-shrink-0"></div>
+                        <span><b>เริ่มต้น / สิ้นสุด:</b> จุดเริ่มและจบผังงาน</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-white/10 p-2 rounded-xl backdrop-blur-xs">
+                        <div class="w-7 h-4 bg-blue-500 rounded-lg flex-shrink-0"></div>
+                        <span><b>กระบวนการ:</b> การปฏิบัติงาน / คำนวณ</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-white/10 p-2 rounded-xl backdrop-blur-xs">
+                        <div class="w-7 h-4 bg-amber-500 rotate-45 scale-7 flex-shrink-0"></div>
+                        <span><b>การตัดสินใจ:</b> ตรวจสอบเงื่อนไข (ใช่/ไม่ใช่)</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-white/10 p-2 rounded-xl backdrop-blur-xs">
+                        <div class="w-7 h-4 bg-emerald-500 -skew-x-12 flex-shrink-0"></div>
+                        <span><b>นำเข้า/แสดงผล:</b> รับหรือแสดงข้อมูล</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hints Box -->
+            <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200 text-xs text-amber-900 flex items-start space-x-3">
+                <i class="fa-solid fa-comment-dots text-amber-500 text-lg flex-shrink-0 mt-0.5"></i>
+                <div>
+                    <span class="font-bold block mb-0.5">คำแนะนำจากครูคอม:</span>
+                    <span id="hint-text">สังเกตรูปทรงของบล็อกให้ตรงกับประเภทของขั้นตอนนะจ๊ะ!</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <section class="lg:col-span-8 flex flex-col space-y-4">
+            
+            <!-- Target Canvas / Drop Zones -->
+            <div class="bg-white rounded-3xl p-5 md:p-6 shadow-lg border border-sky-100 flex-grow flex flex-col min-h-[420px]">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                    <h3 class="font-bold text-slate-700 text-sm md:text-base flex items-center space-x-2">
+                        <i class="fa-solid fa-arrow-down-short-wide text-sky-500"></i>
+                        <span>พื้นที่จัดเรียงผังงาน (Flowchart Canvas)</span>
+                    </h3>
+                    <button onclick="resetCurrentLevel()" class="text-xs text-slate-400 hover:text-rose-500 transition flex items-center space-x-1">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>เริ่มใหม่</span>
+                    </button>
+                </div>
+
+                <!-- Drop Zones Container -->
+                <div id="flowchart-board" class="flex-grow flex flex-col items-center justify-center space-y-3 py-2 overflow-y-auto max-h-[500px]">
+                    <!-- Generated Dynamically -->
+                </div>
+
+                <!-- Controls Bottom Bar -->
+                <div class="mt-4 pt-3 border-t border-slate-100 flex justify-end items-center space-x-3">
+                    <button id="check-btn" onclick="checkAnswers()" class="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-2xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>ตรวจคำตอบ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Item Pool / Source Blocks -->
+            <div class="bg-slate-900 text-white rounded-3xl p-4 md:p-5 shadow-lg">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center space-x-2">
+                    <i class="fa-solid fa-cubes text-amber-400"></i>
+                    <span>กล่องขั้นตอน (ลากหรือคลิกใส่ช่องว่าง)</span>
+                </h4>
+                
+                <div id="item-pool" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    <!-- Cards will be populated dynamically -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Knowledge Modal -->
+    <div id="knowledge-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-fade-in relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeKnowledgeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center bg-slate-100">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <div class="flex items-center space-x-3">
+                <div class="bg-sky-100 text-sky-600 w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">สรุปความรู้: สัญลักษณ์ผังงาน (Flowchart)</h3>
+            </div>
+
+            <div class="space-y-3 text-xs md:text-sm text-slate-600">
+                <div class="border border-slate-100 p-3 rounded-2xl flex items-center space-x-3 bg-rose-50/50">
+                    <div class="w-20 py-2 rounded-full bg-rose-500 text-white font-bold text-center text-xs flex-shrink-0">เริ่มต้น/จบ</div>
+                    <div>
+                        <strong class="text-slate-800 block text-xs md:text-sm">Terminal (จุดเริ่มต้น / สิ้นสุด)</strong>
+                        <span>ใช้ระบุจุดเริ่มต้นและจุดสิ้นสุดของอัลกอริทึม</span>
+                    </div>
+                </div>
+
+                <div class="border border-slate-100 p-3 rounded-2xl flex items-center space-x-3 bg-blue-50/50">
+                    <div class="w-20 py-2 rounded-xl bg-blue-500 text-white font-bold text-center text-xs flex-shrink-0">กระบวนการ</div>
+                    <div>
+                        <strong class="text-slate-800 block text-xs md:text-sm">Process (การปฏิบัติงาน)</strong>
+                        <span>ใช้สำหรับการประมวลผล คำนวณ หรือกำหนดค่า</span>
+                    </div>
+                </div>
+
+                <div class="border border-slate-100 p-3 rounded-2xl flex items-center space-x-3 bg-amber-50/50">
+                    <div class="w-20 py-2 rounded-lg bg-amber-500 text-white font-bold text-center text-xs flex-shrink-0">การตัดสินใจ</div>
+                    <div>
+                        <strong class="text-slate-800 block text-xs md:text-sm">Decision (การตัดสินใจ)</strong>
+                        <span>ใช้เปรียบเทียบเงื่อนไข โดยจะมีทางออก 2 ทาง (ใช่/ไม่ใช่)</span>
+                    </div>
+                </div>
+
+                <div class="border border-slate-100 p-3 rounded-2xl flex items-center space-x-3 bg-emerald-50/50">
+                    <div class="w-20 py-2 rounded-lg bg-emerald-500 text-white font-bold text-center text-xs -skew-x-12 flex-shrink-0">นำเข้า/แสดง</div>
+                    <div>
+                        <strong class="text-slate-800 block text-xs md:text-sm">Input / Output (นำเข้าและแสดงข้อมูล)</strong>
+                        <span>รับข้อมูลหรือแสดงผลโดยไม่ระบุอุปกรณ์</span>
+                    </div>
+                </div>
+
+                <div class="border border-slate-100 p-3 rounded-2xl flex items-center space-x-3 bg-slate-50">
+                    <div class="w-20 py-1 text-slate-400 font-bold text-center text-lg flex-shrink-0">↓</div>
+                    <div>
+                        <strong class="text-slate-800 block text-xs md:text-sm">Flowline (ทิศทางขั้นตอน)</strong>
+                        <span>หัวลูกศรชี้ทิศทางการทำงานจากลำดับหนึ่งไปอีกลำดับหนึ่ง</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeKnowledgeModal()" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2.5 rounded-2xl transition shadow-md">
+                เข้าใจแล้ว! กลับไปเล่นเกม
+            </button>
+        </div>
+    </div>
+
+    <!-- Feedback Message Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
+        <i id="toast-icon" class="fa-solid fa-circle-info text-amber-400 text-lg"></i>
+        <span id="toast-message" class="text-xs md:text-sm font-medium">ข้อความแจ้งเตือน</span>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center shadow-2xl space-y-4 animate-bounce-in">
+            <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-4xl mx-auto shadow-inner">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800">เก่งมาก! ผ่านด่านแล้ว 🎉</h3>
+            <p id="victory-text" class="text-sm text-slate-600">น้องๆ สามารถเรียงลำดับผังงานได้ถูกต้องสมบูรณ์แบบ!</p>
+            
+            <div class="bg-slate-50 p-4 rounded-2xl flex justify-around items-center border border-slate-100">
+                <div>
+                    <span class="text-xs text-slate-400 block">คะแนนด่านนี้</span>
+                    <span id="earned-score" class="text-xl font-bold text-emerald-600">+100</span>
+                </div>
+                <div class="h-8 w-px bg-slate-200"></div>
+                <div>
+                    <span class="text-xs text-slate-400 block">คะแนนสะสม</span>
+                    <span id="modal-total-score" class="text-xl font-bold text-amber-600">100</span>
+                </div>
+            </div>
+
+            <button id="next-level-btn" onclick="nextLevel()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3 rounded-2xl shadow-lg transition">
+                ไปด่านต่อไป <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Game Data (Levels for Grade 5 Algorithmic Flowcharts)
+        const levels = [
+            {
+                id: 1,
+                title: "การชงนมร้อน",
+                description: "เรียงลำดับขั้นตอนอัลกอริทึมการชงนมร้อนง่ายๆ ให้อุ่นอร่อย!",
+                hint: "ผังงานต้องเริ่มด้วย 'เริ่มต้น' และจบด้วย 'สิ้นสุด' เสมอนะ!",
+                items: [
+                    { id: "l1-1", type: "start", text: "เริ่มต้น" },
+                    { id: "l1-2", type: "process", text: "ตักผงนมใส่แก้ว" },
+                    { id: "l1-3", type: "process", text: "เทน้ำร้อนใส่แก้ว" },
+                    { id: "l1-4", type: "process", text: "คนให้ละลาย" },
+                    { id: "l1-5", type: "end", text: "สิ้นสุด" }
+                ],
+                // Structure expected: array of shapes required
+                structure: [
+                    { shape: "start", placeholder: "จุดเริ่มต้น" },
+                    { shape: "process", placeholder: "ขั้นตอนที่ 1" },
+                    { shape: "process", placeholder: "ขั้นตอนที่ 2" },
+                    { shape: "process", placeholder: "ขั้นตอนที่ 3" },
+                    { shape: "end", placeholder: "จุดสิ้นสุด" }
+                ],
+                correctOrder: ["l1-1", "l1-2", "l1-3", "l1-4", "l1-5"]
+            },
+            {
+                id: 2,
+                title: "การล้างจาน",
+                description: "ช่วยน้องจัดเรียงขั้นตอนการล้างจานให้สะอาดหมดจดกันเถอะ",
+                hint: "กวาดเศษอาหารก่อน แล้วค่อยถูน้ำยา จากนั้นล้างน้ำสะอาดนะ",
+                items: [
+                    { id: "l2-1", type: "start", text: "เริ่มต้น" },
+                    { id: "l2-2", type: "process", text: "กวาดเศษอาหารทิ้ง" },
+                    { id: "l2-3", type: "process", text: "ล้างด้วยน้ำยาล้างจาน" },
+                    { id: "l2-4", type: "process", text: "ล้างด้วยน้ำสะอาด" },
+                    { id: "l2-5", type: "end", text: "สิ้นสุด" }
+                ],
+                structure: [
+                    { shape: "start", placeholder: "จุดเริ่มต้น" },
+                    { shape: "process", placeholder: "ขั้นตอนที่ 1" },
+                    { shape: "process", placeholder: "ขั้นตอนที่ 2" },
+                    { shape: "process", placeholder: "ขั้นตอนที่ 3" },
+                    { shape: "end", placeholder: "จุดสิ้นสุด" }
+                ],
+                correctOrder: ["l2-1", "l2-2", "l2-3", "l2-4", "l2-5"]
+            },
+            {
+                id: 3,
+                title: "การข้ามถนนอย่างปลอดภัย",
+                description: "มีเงื่อนไขการตัดสินใจเข้ามาแล้ว! มองซ้ายมองขวาให้ดีก่อนข้ามถนนนะ",
+                hint: "บล็อกสี่เหลี่ยมข้าวหลามตัดใช้สำหรับ 'ตรวจสอบเงื่อนไข' (ปลอดภัยหรือไม่)",
+                items: [
+                    { id: "l3-1", type: "start", text: "เริ่มต้น" },
+                    { id: "l3-2", type: "process", text: "มองซ้ายและมองขวา" },
+                    { id: "l3-3", type: "decision", text: "มีรถวิ่งมาหรือไม่?" },
+                    { id: "l3-4", type: "process", text: "เดินข้ามทางลายข้าม" },
+                    { id: "l3-5", type: "end", text: "สิ้นสุด" }
+                ],
+                structure: [
+                    { shape: "start", placeholder: "จุดเริ่มต้น" },
+                    { shape: "process", placeholder: "สังเกตถนน" },
+                    { shape: "decision", placeholder: "เงื่อนไขการตรวจสอบ" },
+                    { shape: "process", placeholder: "การปฏิบัติ" },
+                    { shape: "end", placeholder: "จุดสิ้นสุด" }
+                ],
+                correctOrder: ["l3-1", "l3-2", "l3-3", "l3-4", "l3-5"]
+            },
+            {
+                id: 4,
+                title: "การต้มไข่ไก่ (เช็คเวลา)",
+                description: "ต้มไข่ต้มให้อร่อย ต้องมีการตรวจเช็คเวลาว่าครบ 7 นาทีหรือยัง",
+                hint: "ถ้ายังต้มไม่ครบเวลา จะต้องต้มต่ออีกนิดนะ!",
+                items: [
+                    { id: "l4-1", type: "start", text: "เริ่มต้น" },
+                    { id: "l4-2", type: "process", text: "ใส่ไข่ลงในน้ำเดือด" },
+                    { id: "l4-3", type: "decision", text: "ต้มครบ 7 นาทีหรือยัง?" },
+                    { id: "l4-4", type: "process", text: "ตักไข่ขึ้นแช่น้ำเย็น" },
+                    { id: "l4-5", type: "end", text: "สิ้นสุด" }
+                ],
+                structure: [
+                    { shape: "start", placeholder: "จุดเริ่มต้น" },
+                    { shape: "process", placeholder: "เริ่มต้มไข่" },
+                    { shape: "decision", placeholder: "เช็คเวลา" },
+                    { shape: "process", placeholder: "ตักไข่ขึ้น" },
+                    { shape: "end", placeholder: "จุดสิ้นสุด" }
+                ],
+                correctOrder: ["l4-1", "l4-2", "l4-3", "l4-4", "l4-5"]
+            },
+            {
+                id: 5,
+                title: "โปรแกรมคำนวณราคาสินค้า",
+                description: "รับค่าราคาสินค้าและแสดงผลรวมเงินที่ต้องจ่าย",
+                hint: "บล็อกทรงสี่เหลี่ยมด้านขนาน (เอียง) ใช้สำหรับ 'รับข้อมูล' และ 'แสดงผล'",
+                items: [
+                    { id: "l5-1", type: "start", text: "เริ่มต้น" },
+                    { id: "l5-2", type: "io", text: "รับค่าราคาสินค้า (Input)" },
+                    { id: "l5-3", type: "process", text: "คำนวณ: ราคา + ภาษี 7%" },
+                    { id: "l5-4", type: "io", text: "แสดงผลยอดเงินรวม" },
+                    { id: "l5-5", type: "end", text: "สิ้นสุด" }
+                ],
+                structure: [
+                    { shape: "start", placeholder: "จุดเริ่มต้น" },
+                    { shape: "io", placeholder: "รับค่าข้อมูล" },
+                    { shape: "process", placeholder: "ประมวลผลคำนวณ" },
+                    { shape: "io", placeholder: "แสดงผลลัพธ์" },
+                    { shape: "end", placeholder: "จุดสิ้นสุด" }
+                ],
+                correctOrder: ["l5-1", "l5-2", "l5-3", "l5-4", "l5-5"]
+            }
+        ];
+
+        // State Management
+        let currentLevelIndex = 0;
+        let totalScore = 0;
+        let userAnswers = {}; // Map of zoneIndex -> itemObj
+        let selectedItem = null; // Currently clicked/selected item for click-to-place fallback
+
+        // DOM Elements
+        const totalScoreEl = document.getElementById('total-score');
+        const levelTitleEl = document.getElementById('level-title');
+        const levelDescEl = document.getElementById('level-description');
+        const levelIndicatorEl = document.getElementById('level-indicator');
+        const hintTextEl = document.getElementById('hint-text');
+        const boardContainer = document.getElementById('flowchart-board');
+        const poolContainer = document.getElementById('item-pool');
+        const levelButtonsContainer = document.getElementById('level-buttons-container');
+
+        // Initialize Game on Window Load
+        window.onload = function() {
+            renderLevelButtons();
+            loadLevel(0);
+        };
+
+        // Render Level Selection Navigation
+        function renderLevelButtons() {
+            levelButtonsContainer.innerHTML = '';
+            levels.forEach((lvl, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `py-2 rounded-xl text-xs font-bold transition flex items-center justify-center ${
+                    idx === currentLevelIndex
+                        ? 'bg-sky-500 text-white shadow-md'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                }`;
+                btn.innerText = `ด่าน ${idx + 1}`;
+                btn.onclick = () => loadLevel(idx);
+                levelButtonsContainer.appendChild(btn);
+            });
+        }
+
+        // Load specific level
+        function loadLevel(index) {
+            currentLevelIndex = index;
+            userAnswers = {};
+            selectedItem = null;
+
+            const lvl = levels[currentLevelIndex];
+            
+            // Update Header/Sidebar info
+            levelTitleEl.innerText = lvl.title;
+            levelDescEl.innerText = lvl.description;
+            levelIndicatorEl.innerText = `ด่าน ${lvl.id} จาก ${levels.length}`;
+            hintTextEl.innerText = lvl.hint;
+
+            renderLevelButtons();
+            renderBoard();
+            renderPool();
+        }
+
+        // Reset Current Level
+        function resetCurrentLevel() {
+            userAnswers = {};
+            selectedItem = null;
+            renderBoard();
+            renderPool();
+            showToast('รีเซ็ตกระดานเรียบร้อยแล้ว', 'info');
+        }
+
+        // Render Flowchart Board Drop Zones
+        function renderBoard() {
+            boardContainer.innerHTML = '';
+            const lvl = levels[currentLevelIndex];
+
+            lvl.structure.forEach((step, index) => {
+                // Drop Zone Wrapper
+                const wrapper = document.createElement('div');
+                wrapper.className = "flex flex-col items-center w-full max-w-sm";
+
+                // The Zone Box
+                const zone = document.createElement('div');
+                zone.dataset.index = index;
+                zone.dataset.expectedShape = step.shape;
+                zone.className = `drop-zone min-h-[64px] w-full border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center p-2 relative bg-slate-50/50 transition-all cursor-pointer hover:border-sky-400`;
+
+                // Handle Drag & Drop Events
+                zone.ondragover = handleDragOver;
+                zone.ondragleave = handleDragLeave;
+                zone.ondrop = (e) => handleDrop(e, index);
+                zone.onclick = () => handleZoneClick(index);
+
+                // Render placed item if exists
+                if (userAnswers[index]) {
+                    const item = userAnswers[index];
+                    zone.appendChild(createPlacedCardElement(item, index));
+                    zone.classList.remove('border-dashed', 'bg-slate-50/50');
+                    zone.classList.add('border-solid', 'border-sky-300', 'bg-white');
+                } else {
+                    // Empty Zone Placeholder Hint
+                    zone.innerHTML = `
+                        <div class="text-xs text-slate-400 flex items-center space-x-1.5 pointer-events-none">
+                            <i class="fa-regular fa-square-plus text-slate-300"></i>
+                            <span>${step.placeholder}</span>
+                        </div>
+                    `;
+                }
+
+                wrapper.appendChild(zone);
+
+                // Flowline Arrow (Except after last item)
+                if (index < lvl.structure.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = "my-1 text-sky-400 text-sm animate-pulse flex flex-col items-center";
+                    arrow.innerHTML = `<i class="fa-solid fa-arrow-down"></i>`;
+                    wrapper.appendChild(arrow);
+                }
+
+                boardContainer.appendChild(wrapper);
+            });
+        }
+
+        // Render Available Item Pool
+        function renderPool() {
+            poolContainer.innerHTML = '';
+            const lvl = levels[currentLevelIndex];
+
+            // Filter out items already placed
+            const placedIds = Object.values(userAnswers).map(item => item.id);
+            
+            // Shuffle items to make it a puzzle (shallow copy and shuffle once per level load)
+            if (!lvl._shuffledItems) {
+                lvl._shuffledItems = [...lvl.items].sort(() => Math.random() - 0.5);
+            }
+
+            lvl._shuffledItems.forEach(item => {
+                if (placedIds.includes(item.id)) return; // Don't render placed items
+
+                const card = document.createElement('div');
+                card.draggable = true;
+                card.dataset.itemId = item.id;
+                card.className = `draggable-item p-3 rounded-2xl shadow-sm border border-slate-700 bg-slate-800 hover:bg-slate-750 flex items-center justify-between text-white text-xs md:text-sm font-medium ${
+                    selectedItem?.id === item.id ? 'ring-2 ring-amber-400 scale-105' : ''
+                }`;
+
+                // Drag Events
+                card.ondragstart = (e) => handleDragStart(e, item);
+
+                // Click event for click-to-place fallback
+                card.onclick = () => selectPoolItem(item);
+
+                // Inner shape badge
+                const shapeBadge = getShapeIconHTML(item.type);
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-2.5">
+                        ${shapeBadge}
+                        <span>${item.text}</span>
+                    </div>
+                    <i class="fa-solid fa-grip-vertical text-slate-500 text-xs"></i>
+                `;
+
+                poolContainer.appendChild(card);
+            });
+
+            if (poolContainer.children.length === 0) {
+                poolContainer.innerHTML = `
+                    <div class="col-span-full py-4 text-center text-xs text-slate-400 italic">
+                        วางครบทุกขั้นตอนแล้ว! กด "ตรวจคำตอบ" ด้านบนได้เลย
+                    </div>
+                `;
+            }
+        }
+
+        // Generate Styled Visual Badge for Item Types
+        function getShapeIconHTML(type) {
+            switch(type) {
+                case 'start':
+                case 'end':
+                    return `<span class="w-5 h-5 rounded-full bg-rose-500 flex items-center justify-center text-[10px] font-bold text-white shadow-xs">S/E</span>`;
+                case 'process':
+                    return `<span class="w-5 h-5 rounded-md bg-blue-500 flex items-center justify-center text-[10px] font-bold text-white shadow-xs">P</span>`;
+                case 'decision':
+                    return `<span class="w-5 h-5 rounded-sm bg-amber-500 rotate-45 flex items-center justify-center text-[10px] font-bold text-white shadow-xs"><span class="-rotate-45">D</span></span>`;
+                case 'io':
+                    return `<span class="w-5 h-5 -skew-x-12 rounded-sm bg-emerald-500 flex items-center justify-center text-[10px] font-bold text-white shadow-xs"><span class="skew-x-12">I/O</span></span>`;
+                default:
+                    return `<span class="w-5 h-5 rounded-md bg-slate-500"></span>`;
+            }
+        }
+
+        // Create Placed Card Element Inside Zone
+        function createPlacedCardElement(item, zoneIndex) {
+            const el = document.createElement('div');
+            el.className = `w-full py-2.5 px-4 rounded-xl flex items-center justify-between font-medium text-xs md:text-sm shadow-md transition ${getShapeStyleClasses(item.type)}`;
+            
+            el.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-grip-dots text-white/70"></i>
+                    <span>${item.text}</span>
+                </div>
+                <button onclick="event.stopPropagation(); removePlacedItem(${zoneIndex})" class="text-white/80 hover:text-white hover:bg-white/20 w-6 h-6 rounded-full flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-xs"></i>
+                </button>
+            `;
+            return el;
+        }
+
+        function getShapeStyleClasses(type) {
+            switch(type) {
+                case 'start':
+                case 'end':
+                    return 'shape-start-end';
+                case 'process':
+                    return 'shape-process';
+                case 'decision':
+                    return 'shape-decision';
+                case 'io':
+                    return 'shape-input-output';
+                default:
+                    return 'bg-slate-700 text-white';
+            }
+        }
+
+        // Drag & Drop Handlers
+        let draggedItemData = null;
+
+        function handleDragStart(e, item) {
+            draggedItemData = item;
+            e.dataTransfer.setData('text/plain', JSON.stringify(item));
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e, zoneIndex) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+
+            let item = draggedItemData;
+            if (!item) {
+                try {
+                    item = JSON.parse(e.dataTransfer.getData('text/plain'));
+                } catch(err) { return; }
+            }
+
+            if (item) {
+                placeItemInZone(item, zoneIndex);
+            }
+            draggedItemData = null;
+        }
+
+        // Fallback: Click to Select / Click to Place
+        function selectPoolItem(item) {
+            if (selectedItem?.id === item.id) {
+                selectedItem = null;
+            } else {
+                selectedItem = item;
+                showToast(`เลือก "${item.text}" แล้ว แตะที่ช่องว่างเพื่อวาง`, 'info');
+            }
+            renderPool();
+        }
+
+        function handleZoneClick(zoneIndex) {
+            if (selectedItem) {
+                placeItemInZone(selectedItem, zoneIndex);
+                selectedItem = null;
+            }
+        }
+
+        function placeItemInZone(item, zoneIndex) {
+            // Remove item from any existing zone if it was moved
+            Object.keys(userAnswers).forEach(key => {
+                if (userAnswers[key]?.id === item.id) {
+                    delete userAnswers[key];
+                }
+            });
+
+            // Assign to new zone
+            userAnswers[zoneIndex] = item;
+            renderBoard();
+            renderPool();
+        }
+
+        function removePlacedItem(zoneIndex) {
+            delete userAnswers[zoneIndex];
+            renderBoard();
+            renderPool();
+        }
+
+        // Validate Answers
+        function checkAnswers() {
+            const lvl = levels[currentLevelIndex];
+            const filledCount = Object.keys(userAnswers).length;
+
+            if (filledCount < lvl.correctOrder.length) {
+                showToast('ยังวางขั้นตอนไม่ครบทุกช่องเลยครับลองดูใหม่นะ!', 'error');
+                return;
+            }
+
+            // Check correctness
+            let isCorrect = true;
+            for (let i = 0; i < lvl.correctOrder.length; i++) {
+                if (!userAnswers[i] || userAnswers[i].id !== lvl.correctOrder[i]) {
+                    isCorrect = false;
+                    break;
+                }
+            }
+
+            if (isCorrect) {
+                // Trigger Confetti Celebration
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+
+                totalScore += 100;
+                totalScoreEl.innerText = totalScore;
+                document.getElementById('modal-total-score').innerText = totalScore;
+
+                // Show Victory Modal
+                const modal = document.getElementById('victory-modal');
+                const nextBtn = document.getElementById('next-level-btn');
+                
+                if (currentLevelIndex >= levels.length - 1) {
+                    nextBtn.innerHTML = `จบการผจญภัยแล้ว! เล่นใหม่อีกครั้ง <i class="fa-solid fa-rotate-right ml-1"></i>`;
+                } else {
+                    nextBtn.innerHTML = `ไปด่านต่อไป <i class="fa-solid fa-arrow-right ml-1"></i>`;
+                }
+
+                modal.classList.remove('hidden');
+            } else {
+                showToast('ยังมีบางขั้นตอนเรียงไม่ถูกต้อง ลองปรับใหม่อีกครั้งนะ!', 'error');
+            }
+        }
+
+        function nextLevel() {
+            document.getElementById('victory-modal').classList.add('hidden');
+            if (currentLevelIndex < levels.length - 1) {
+                loadLevel(currentLevelIndex + 1);
+            } else {
+                // Restart Game
+                totalScore = 0;
+                totalScoreEl.innerText = totalScore;
+                loadLevel(0);
+            }
+        }
+
+        // Toast Messages Helper
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMessage.innerText = message;
+            
+            if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-circle-xmark text-rose-400 text-lg';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-info text-amber-400 text-lg';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Knowledge Modal Handlers
+        function showKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.remove('hidden');
+        }
+
+        function closeKnowledgeModal() {
+            document.getElementById('knowledge-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
